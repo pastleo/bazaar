@@ -1,18 +1,18 @@
 export default class Player {
   static PreloadSprite(scene) {
-    scene.load.image('mfwba-idle-1', '/game/assets/generic-platformer-pack--bakudas/Player/idle/anim1.png');
-    scene.load.image('mfwba-idle-2', '/game/assets/generic-platformer-pack--bakudas/Player/idle/anim2.png');
-    scene.load.image('mfwba-idle-3', '/game/assets/generic-platformer-pack--bakudas/Player/idle/anim3.png');
-    scene.load.image('mfwba-idle-4', '/game/assets/generic-platformer-pack--bakudas/Player/idle/anim4.png');
+    scene.load.image('mfwba-idle-1', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/idle/anim1.png');
+    scene.load.image('mfwba-idle-2', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/idle/anim2.png');
+    scene.load.image('mfwba-idle-3', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/idle/anim3.png');
+    scene.load.image('mfwba-idle-4', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/idle/anim4.png');
 
-    scene.load.image('mfwba-run-5', '/game/assets/generic-platformer-pack--bakudas/Player/run/anim5.png');
-    scene.load.image('mfwba-run-6', '/game/assets/generic-platformer-pack--bakudas/Player/run/anim6.png');
-    scene.load.image('mfwba-run-7', '/game/assets/generic-platformer-pack--bakudas/Player/run/anim7.png');
-    scene.load.image('mfwba-run-8', '/game/assets/generic-platformer-pack--bakudas/Player/run/anim8.png');
-    scene.load.image('mfwba-run-9', '/game/assets/generic-platformer-pack--bakudas/Player/run/anim9.png');
-    scene.load.image('mfwba-run-10', '/game/assets/generic-platformer-pack--bakudas/Player/run/anim10.png');
-    scene.load.image('mfwba-run-11', '/game/assets/generic-platformer-pack--bakudas/Player/run/anim11.png');
-    scene.load.image('mfwba-run-12', '/game/assets/generic-platformer-pack--bakudas/Player/run/anim12.png');
+    scene.load.image('mfwba-run-5', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/run/anim5.png');
+    scene.load.image('mfwba-run-6', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/run/anim6.png');
+    scene.load.image('mfwba-run-7', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/run/anim7.png');
+    scene.load.image('mfwba-run-8', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/run/anim8.png');
+    scene.load.image('mfwba-run-9', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/run/anim9.png');
+    scene.load.image('mfwba-run-10', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/run/anim10.png');
+    scene.load.image('mfwba-run-11', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/run/anim11.png');
+    scene.load.image('mfwba-run-12', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/run/anim12.png');
   }
 
   static Anims = {

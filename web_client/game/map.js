@@ -1,7 +1,7 @@
 export default class TiledMap {
   static PreloadTilesAndMap(scene) {
-    scene.load.image('gpp-tiles', '/game/assets/generic-platformer-pack--bakudas/atlas.png');
-    scene.load.tilemapTiledJSON('map', '/game/tiled-map.json');
+    scene.load.image('gpp-tiles', '/game/third-party-assets/generic-platformer-pack--bakudas/atlas.png');
+    scene.load.tilemapTiledJSON('map', '/game/assets/tiled-map.json');
   }
 
   constructor(scene) {
