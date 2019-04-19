@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title id='title'>unnamed web client</title>
+  <style>
+    .peer-container {
+      padding: 5px;
+      margin: 5px;
+      border-style: solid;
+      border-width: 1px;
+    }
+    .peer-container.ready {
+      border-color: green;
+    }
+    .peer-container h3, .peer-container h4 {
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+    .peer-container .via-container:not(.shown) {
+      display: none;
+    }
+    .peer-container select:not(.shown) {
+      display: none;
+    }
+    .peer-container .second-ctl-line {
+      margin-top: 5px;
+    }
+    .input-line {
+      display: flex;
+      padding: 10px;
+    }
+    .input-line input {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+  <h1>myName: <span id='my-name'></span></h1>
+  <div class='input-line'>
+    <input type='text' id='direct-connect-name'></input><button id='direct-connect'>direct connect</button>
+  </div>
+  <div id='peers'>
+  </div>
+  <div class='input-line'>
+    <input type='text' id='message-input' placeholder='type some message'></input><button id='message-broadcast'>broadcast</button>
+  </div>
+  <div id='messages-box'>
+  </div>
+
+  <template id='peer-template'>
+    <div class='peer-container'>
+      <h3><span class='name'></span></h3>
+      <h4 class='via-container'>via: <span class='via'></span></h4>
+      <div>
+        <button class='ping'>ping</button>
+        <button class='query-peers'>queryPeers and connect</button>
+        <button class='disconnect'>disconnect</button>
+      </div>
+      <div class='second-ctl-line'>
+        <select class='connect-select'><option value=''>choose a peer to connect</option></select>
+        <select class='change-via-select'><option value=''>choose a peer to change via</option></select>
+      </div>
+    </div>
+  </template>
+  <template id='message-line-template'>
+    <p><span class='peer-name'></span>: <span class='message-content'></span></p>
+  </template>
+
+  <script type="module" src="lib/peerConnsExample.js"></script>
+</body>
+</html>
