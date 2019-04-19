@@ -10,7 +10,8 @@ defmodule WsPeer.Application do
     children = [
       # Start the endpoint when the application starts
       WsPeerWeb.Endpoint,
-      WsPeer.Peers
+      WsPeer.Peers,
+      WsPeer.Requestings
       # Starts a worker by calling: WsPeer.Worker.start_link(arg)
       # {WsPeer.Worker, arg},
     ]
