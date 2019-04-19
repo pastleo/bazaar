@@ -1,0 +1,9 @@
+html, body {
+  margin: 0;
+}
+
+#game {
+  position: fixed;
+  top: 0;
+  z-index: -1;
+}
