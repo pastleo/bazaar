@@ -16,7 +16,7 @@ defmodule WsPeerWeb.PeerSocket do
   # See `Phoenix.Token` documentation for examples in
   # performing token verification on connect.
   def connect(_params, socket, _connect_info) do
-    {:ok, socket}
+    {:ok, assign(socket, :socket_id, WsPeer.Utils.random_str())}
   end
 
   # Socket id's are topics that allow you to identify all sockets for a given user:
@@ -29,5 +29,12 @@ defmodule WsPeerWeb.PeerSocket do
   #     WsPeerWeb.Endpoint.broadcast("user_socket:#{user.id}", "disconnect", %{})
   #
   # Returning `nil` makes this socket anonymous.
-  def id(_socket), do: nil
+  #def id(_socket), do: nil
+  def id(socket) do
+    socket.assigns.socket_id
+  end
+
+  def disconnect(name) do
+    WsPeerWeb.Endpoint.broadcast(WsPeer.Peers.get(name).socket_id, "disconnect", %{})
+  end
 end
