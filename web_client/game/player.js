@@ -1,64 +1,13 @@
-export default class Player {
-  static PreloadSprite(scene) {
-    scene.load.image('mfwba-idle-1', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/idle/anim1.png');
-    scene.load.image('mfwba-idle-2', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/idle/anim2.png');
-    scene.load.image('mfwba-idle-3', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/idle/anim3.png');
-    scene.load.image('mfwba-idle-4', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/idle/anim4.png');
+import Human from './human.js';
 
-    scene.load.image('mfwba-run-5', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/run/anim5.png');
-    scene.load.image('mfwba-run-6', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/run/anim6.png');
-    scene.load.image('mfwba-run-7', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/run/anim7.png');
-    scene.load.image('mfwba-run-8', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/run/anim8.png');
-    scene.load.image('mfwba-run-9', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/run/anim9.png');
-    scene.load.image('mfwba-run-10', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/run/anim10.png');
-    scene.load.image('mfwba-run-11', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/run/anim11.png');
-    scene.load.image('mfwba-run-12', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/run/anim12.png');
-  }
+import * as peerConns from '../lib/peerConns.js';
+import { movementUpdateTerm } from './scene.js';
+import * as peers from '../lib/peers.js';
 
-  static Anims = {
-    Idle: 'player-anims-idle',
-    Run: 'player-anims-run',
-  }
-
-  constructor(scene, x, y) {
-    this.sprite = scene.physics.add
-      .sprite(x, y, 'mfwba-idle-1')
-      .setDrag(500, 0)
-      .setMaxVelocity(150, 200)
-      .setSize(18, 24)
-      .setOffset(7, 9);
+export default class Player extends Human {
+  constructor(scene, x, y, name) {
+    super(scene, x, y, name);
     this.cursor = scene.input.keyboard.createCursorKeys();;
-    this.constructAnims(scene);
-  }
-
-  constructAnims(scene) {
-    scene.anims.create({
-      key: Player.Anims.Idle,
-      frames: [
-        { key: 'mfwba-idle-1' },
-        { key: 'mfwba-idle-2' },
-        { key: 'mfwba-idle-3' },
-        { key: 'mfwba-idle-4', duration: 50 },
-      ],
-      frameRate: 8,
-      repeat: -1,
-    });
-
-    scene.anims.create({
-      key: Player.Anims.Run,
-      frames: [
-        { key: 'mfwba-run-5' },
-        { key: 'mfwba-run-6' },
-        { key: 'mfwba-run-7' },
-        { key: 'mfwba-run-8' },
-        { key: 'mfwba-run-9' },
-        { key: 'mfwba-run-10' },
-        { key: 'mfwba-run-11' },
-        { key: 'mfwba-run-12', duration: 50 },
-      ],
-      frameRate: 8,
-      repeat: -1,
-    });
   }
 
   update() {
@@ -67,15 +16,19 @@ export default class Player {
     if (this.cursor.left.isDown) {
       this.sprite.setAccelerationX(-acceleration);
       this.sprite.setFlipX(true);
+      this.broadcaseMovement('left', { ax: -acceleration, flip: 'x' });
     } else if (this.cursor.right.isDown) {
       this.sprite.setAccelerationX(acceleration);
       this.sprite.setFlipX(false);
+      this.broadcaseMovement('right', { ax: acceleration, flip: 'n' });
     } else {
       this.sprite.setAccelerationX(0);
+      this.broadcaseMovement('stop', { ax: 0 });
     }
 
     if (onGround && this.cursor.up.isDown) {
       this.sprite.setVelocityY(-150);
+      this.broadcaseMovement('jump', { vy: -150 });
     }
 
     if (onGround) {
@@ -85,6 +38,36 @@ export default class Player {
       this.sprite.anims.stop();
       this.sprite.setTexture('mfwba-run-11');
     }
+
+    if (
+      this.sprite.body.velocity.x !== 0 ||
+      this.sprite.body.velocity.y !== 0
+    ) {
+      this.setTextCoordinate();
+    }
+  }
+
+  setName(name) {
+    this.text.text = name;
+  }
+
+  broadcaseMovement(action, params) {
+    if (this.lastMovementAction === action) { return; }
+    peerConns.getConnectedPeerNames().filter(p => {
+      const gameObj = peers.get(p).gameObj;
+      return gameObj && !gameObj.destroyed;
+    }).forEach(p => {
+      this.sendMovement(p, params);
+    });
+    this.lastMovementAction = action;
+  }
+
+  sendMovement(peerName, params = {}) {
+    peerConns.send(peerName, movementUpdateTerm, {
+      x: this.sprite.x,
+      y: this.sprite.y,
+      ...params,
+    });
   }
 }
 

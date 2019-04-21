@@ -1,156 +1,102 @@
-import { Socket } from 'https://unpkg.com/phoenix@1.4.3/assets/js/phoenix.js?module';
+import * as peers from './peers.js'
+import * as peerConns from './peerConns.js'
+import game, { getDefaultScene, onCreate as gameOnCreate } from '../game/index.js'
 
-const rtcConfig = {iceServers: [{urls: 'stun:stun.l.google.com:19302'}]};
-console.log('rtcConfig:', rtcConfig);
+window.ps = peers;
+window.pc = peerConns;
+window.game = game;
 
-const myName = Date.now().toString(36);
-const peerSocket = new Socket("ws://localhost:4000/peer", {});
-peerSocket.connect();
+const msgTerm = 'message';
+const nickNameTerm = 'nickname';
 
-let peerName, phxChannel, rtcConnection, rtcChannel;
+peerConns.setRtcConfig({iceServers: [{urls: 'stun:stun.l.google.com:19302'}]});
+const myName = peerConns.getMyName();
+let nickName;
 
-const setPeerName = name => {
-  peerName = name;
-  document.getElementById('peer-name').textContent = peerName;
-}
+const phxPeerName = 'phx-wss://unnamed.pastleo.me/peer';
+let nextFindNewPeersTimeout;
+let messageLineTemplate, messagesBox
 
-const linkStart = () => {
-  phxChannel.push("all")
-    .receive("ok", ({ peers }) => {
-      const peerNames = Object.keys(peers);
-      setPeerName(
-        peerNames[0] !== myName ? peerNames[0] : peerNames[1]
-      );
-      prepareOfferAndPush();
-    });
-}
+document.addEventListener('DOMContentLoaded', async () => {
+  messageLineTemplate = document.getElementById('message-line-template').content.children[0];
+  messagesBox = document.getElementById('messages-box');
 
-const onTold = ({ from, payload }) => {
-  console.log("from:", from, "onTold", payload)
-  switch (payload.type) {
-    case 'offer':
-      setPeerName(from);
-      prepareAnswerAndPush(payload.offer)
-      break;
-    case 'answer':
-      useAnswer(payload.answer)
-      break;
-    case 'ice':
-      useIceCandidate(payload.ice)
-      break;
+  document.getElementById('change-nickname').onclick = setMyNickName;
+  document.getElementById('message-broadcast').onclick = broadcastMessage;
+  document.getElementById('message-input').addEventListener('keypress', ({ keyCode }) => {
+    if (keyCode === 13) broadcastMessage()
+    return true;
+  });
+});
+
+gameOnCreate(async () => {
+  await peerConns.connect(phxPeerName);
+  setNameOnUI(myName);
+
+  findNewPeers();
+});
+
+async function findNewPeers() {
+  const peersToConnect = (await peerConns.queryPeers(phxPeerName)).filter(p => p !== myName && !peerConns.isConnected(p));
+  for(const peer of peersToConnect) {
+    await peerConns.connect(peer, phxPeerName);
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  phxChannel = peerSocket.channel(`peer:${myName}`, {params: {loc: [0, 0]}})
-  phxChannel
-    .join()
-    .receive("ok", () => {
-      console.log("ok")
-    })
-  phxChannel.on("told", onTold);
-
-  document.getElementById('link-start')
-    .addEventListener('click', linkStart);
-  document.getElementById('send')
-    .addEventListener('click', sendMsg);
-  document.getElementById('my-name').textContent = myName;
-}, false);
-
-// WebRTC part...
-
-// connecting side
-function prepareOfferAndPush() {
-  rtcConnection = new RTCPeerConnection(rtcConfig);
-
-  // IMPORTANT! createDataChannel is required before creating offer
-  rtcChannel = rtcConnection.createDataChannel("msg");
-  rtcChannel.onmessage = receiveMsg;
-
-  rtcConnection.onicecandidate = pushIceCandidate;
-  rtcConnection.oniceconnectionstatechange = rtcConnectionChanged;
-
-  rtcConnection
-    .createOffer()
-    .then(offer => rtcConnection.setLocalDescription(offer))
-    .then(() => {
-      console.log('push offer description:', JSON.stringify(rtcConnection.localDescription))
-      phxChannel.push("tell", {
-        who: peerName,
-        payload: {
-          type: 'offer',
-          offer: JSON.stringify(rtcConnection.localDescription)
-        }
-      });
-    })
-}
-
-// connected side
-function prepareAnswerAndPush(offer) {
-    console.log('get offer:', offer);
-
-    rtcConnection = new RTCPeerConnection(rtcConfig);
-
-    rtcConnection.ondatachannel = ({channel}) => {
-      rtcChannel = channel;
-      rtcChannel.onmessage = receiveMsg;
-    }
-
-    rtcConnection.onicecandidate = pushIceCandidate;
-    rtcConnection.oniceconnectionstatechange = rtcConnectionChanged;
-
-    rtcConnection
-      .setRemoteDescription(JSON.parse(offer))
-      .then(() => rtcConnection.createAnswer())
-      .then(answer => rtcConnection.setLocalDescription(answer))
-      .then(() => {
-        console.log('push answer description:', JSON.stringify(rtcConnection.localDescription))
-        phxChannel.push("tell", {
-          who: peerName,
-          payload: {
-            type: 'answer',
-            answer: JSON.stringify(rtcConnection.localDescription)
-          }
-        });
-      })
-}
-
-function useAnswer(answer) {
-  console.log('using answer:', answer);
-  rtcConnection.setRemoteDescription(JSON.parse(answer));
-}
-
-function pushIceCandidate({candidate}) {
-  if(candidate) {
-    console.log('push ice candidate:', JSON.stringify(candidate))
-    phxChannel.push("tell", {
-      who: peerName,
-      payload: {
-        type: 'ice',
-        ice: JSON.stringify(candidate),
+peerConns.newConnectionReady.do((peerName, viaPeerName) => {
+  if (peerName !== phxPeerName) {
+    getDefaultScene().addPeer(peerName);
+    setTimeout(() => {
+      if (nickName) {
+        peerConns.getConnection(peerName).send(nickNameTerm, { nickName });
       }
-    });
+      getDefaultScene().player.sendMovement(peerName);
+    }, 500);
+  }
+});
+
+peerConns.connectionClosed.do(peerName => {
+  getDefaultScene().rmPeer(peerName);
+});
+
+function broadcastMessage() {
+  const msg = document.getElementById('message-input').value;
+  if (msg) {
+    peerConns.broadcast(msgTerm, { msg })
+    addMessage(myName, msg);
+    document.getElementById('message-input').value = '';
   }
 }
+peerConns.sent.on(msgTerm, ({ msg }, from) => {
+  addMessage(from, msg);
+});
 
-function useIceCandidate(ice) {
-  console.log('using ice:', ice);
-  rtcConnection.addIceCandidate(JSON.parse(ice));
+function addMessage(from, msg) {
+  const dom = document.importNode(messageLineTemplate, true);
+  messagesBox.appendChild(dom);
+  if (messagesBox.children.length > 10) {
+    messagesBox.children[0].remove();
+  }
+  dom.querySelector('.peer-name').textContent = from === myName ? nickName || myName : peers.get(from).nickName || from;
+  dom.querySelector('.message-content').textContent = msg;
 }
 
-function rtcConnectionChanged() {
-  const { iceConnectionState } = rtcConnection;
-  console.log(iceConnectionState)
+function setMyNickName() {
+  const newNickName = prompt('your new nick name?');
+  if (newNickName) {
+    nickName = newNickName;
+    setNameOnUI(nickName);
+    peerConns.broadcast(nickNameTerm, { nickName })
+  }
+}
+peerConns.sent.on(nickNameTerm, ({ nickName }, from) => {
+  getDefaultScene().setPeerNickName(from, nickName);
+  peers.set(from, { nickName });
+});
+
+function setNameOnUI(name) {
+  document.title = `[${name}] bazaar web client`;
+  document.getElementById('change-nickname').textContent = `${name} | change`;
+  getDefaultScene().setMyNickName(name);
 }
 
-function sendMsg() {
-  rtcChannel.send(
-    JSON.stringify(
-      Math.floor(Math.random() * 10000).toString(36)
-    )
-  );
-}
-
-function receiveMsg({ data }) {
-  console.log('receiveMsg', data);
-}

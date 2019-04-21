@@ -6,6 +6,11 @@ const viewport = {
   height: Math.min(document.documentElement.clientHeight, window.innerHeight),
 };
 
+let _onCreate = () => null;
+export function onCreate(callback) {
+  _onCreate = callback;
+}
+
 const config = {
   type: Phaser.AUTO,
   width: viewport.width,
@@ -21,4 +26,9 @@ const config = {
   scene: Scene,
 }
 
-export default new Phaser.Game(config);
+const game = new Phaser.Game(config);
+game.emitCreate = () => _onCreate();
+
+export const getDefaultScene = () => game.scene.scenes[0];
+
+export default game;
