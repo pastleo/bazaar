@@ -7,17 +7,47 @@ import * as peers from '../lib/peers.js';
 export default class Player extends Human {
   constructor(scene, x, y, name) {
     super(scene, x, y, name);
-    this.cursor = scene.input.keyboard.createCursorKeys();;
+    this.cursor = scene.input.keyboard.createCursorKeys();
+    document.getElementById('game').addEventListener('touchstart', e => {
+      const { touches: [{ screenX, screenY }, ..._] } = e;
+      this.touchStartX = screenX;
+      this.touchStartY = screenY;
+      e.preventDefault();
+    });
+    document.getElementById('game').addEventListener('touchmove', e => {
+      const { touches: [{ screenX, screenY }, ..._] } = e;
+      if (screenX - this.touchStartX > 50) {
+        this.dragRightIsDown = true;
+        this.dragLeftIsDown = false;
+      } else if (this.touchStartX - screenX > 50) {
+        this.dragRightIsDown = false;
+        this.dragLeftIsDown = true;
+      } else {
+        this.dragRightIsDown = false;
+        this.dragLeftIsDown = false;
+      }
+      this.touchLastX = screenX;
+      this.touchLastY = screenY;
+      e.preventDefault();
+    });
+    document.getElementById('game').addEventListener('touchend', e => {
+      if (this.touchStartY - this.touchLastY > 50) {
+        this.swipeUp = true;
+      }
+      this.dragRightIsDown = false;
+      this.dragLeftIsDown = false;
+      e.preventDefault();
+    });
   }
 
   update() {
     const onGround = this.sprite.body.blocked.down;
     const acceleration = onGround ? 300 : 100;
-    if (this.cursor.left.isDown) {
+    if (this.cursor.left.isDown || this.dragLeftIsDown) {
       this.sprite.setAccelerationX(-acceleration);
       this.sprite.setFlipX(true);
       this.broadcaseMovement('left', { ax: -acceleration, flip: 'x' });
-    } else if (this.cursor.right.isDown) {
+    } else if (this.cursor.right.isDown || this.dragRightIsDown) {
       this.sprite.setAccelerationX(acceleration);
       this.sprite.setFlipX(false);
       this.broadcaseMovement('right', { ax: acceleration, flip: 'n' });
@@ -26,7 +56,8 @@ export default class Player extends Human {
       this.broadcaseMovement('stop', { ax: 0 });
     }
 
-    if (onGround && this.cursor.up.isDown) {
+    if (onGround && (this.cursor.up.isDown || this.swipeUp)) {
+      this.swipeUp = false;
       this.sprite.setVelocityY(-150);
       this.broadcaseMovement('jump', { vy: -150 });
     }
