@@ -1,4 +1,4 @@
-export default class Human {
+class Human {
   static PreloadSprite(scene) {
     scene.load.image('mfwba-idle-1', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/idle/anim1.png');
     scene.load.image('mfwba-idle-2', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/idle/anim2.png');
@@ -13,11 +13,6 @@ export default class Human {
     scene.load.image('mfwba-run-10', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/run/anim10.png');
     scene.load.image('mfwba-run-11', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/run/anim11.png');
     scene.load.image('mfwba-run-12', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/run/anim12.png');
-  }
-
-  static Anims = {
-    Idle: 'player-anims-idle',
-    Run: 'player-anims-run',
   }
 
   static constructAnims(scene) {
@@ -74,3 +69,9 @@ export default class Human {
   }
 }
 
+Human.Anims = {
+  Idle: 'player-anims-idle',
+  Run: 'player-anims-run',
+}
+
+export default Human
