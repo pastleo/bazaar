@@ -1,20 +1,10 @@
 import /* Phaser from */ 'https://cdnjs.cloudflare.com/ajax/libs/phaser/3.16.2/phaser.min.js';
 import Scene from './scene.js';
 
-const viewport = {
-  width: Math.min(document.documentElement.clientWidth, window.innerWidth),
-  height: Math.min(document.documentElement.clientHeight, window.innerHeight),
-};
-
-let _onCreate = () => null;
-export function onCreate(callback) {
-  _onCreate = callback;
-}
-
 const config = {
   type: Phaser.AUTO,
-  width: viewport.width,
-  height: viewport.height,
+  width: window.innerWidth,
+  height: window.innerHeight,
   parent: 'game',
   backgroundColor: '#7042e5',
   physics: {
@@ -26,9 +16,12 @@ const config = {
   scene: Scene,
 }
 
-const game = new Phaser.Game(config);
-game.emitCreate = () => _onCreate();
+let game;
+export function init() {
+  return new Promise(resolve => {
+    game = new Phaser.Game(config);
+    game.initResolve = () => resolve(game);
+  });
+}
 
 export const getDefaultScene = () => game.scene.scenes[0];
-
-export default game;

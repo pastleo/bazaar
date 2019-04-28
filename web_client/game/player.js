@@ -1,13 +1,18 @@
 import Human from './human.js';
 
-import * as peerConns from '../lib/peerConns.js';
-import { movementUpdateTerm } from './scene.js';
 import * as peers from '../lib/peers.js';
+import * as peerConns from '../lib/peerConns.js';
+
+export const movementUpdateTerm = 'movementUpdate';
 
 export default class Player extends Human {
   constructor(scene, x, y, name) {
     super(scene, x, y, name);
     this.cursor = scene.input.keyboard.createCursorKeys();
+    this.initTouch();
+  }
+
+  initTouch() {
     document.getElementById('game').addEventListener('touchstart', e => {
       const { touches: [{ screenX, screenY }, ..._] } = e;
       this.touchStartX = screenX;

@@ -1,12 +1,11 @@
 import /* Phaser from */ 'https://cdnjs.cloudflare.com/ajax/libs/phaser/3.16.2/phaser.min.js';
 import TiledMap from './map.js';
 import Human from './player.js';
-import Player from './player.js';
+import Player, { movementUpdateTerm } from './player.js';
 import Peer from './peer.js';
+
 import * as peers from '../lib/peers.js';
 import * as peerConns from '../lib/peerConns.js';
-
-export const movementUpdateTerm = 'movementUpdate';
 
 export default class Scene extends Phaser.Scene {
   preload() {
@@ -30,7 +29,17 @@ export default class Scene extends Phaser.Scene {
       peers.get(from).gameObj.setMovement(movementParams);
     });
 
-    this.game.emitCreate();
+    peerConns.newConnectionReady.do((peerName, viaPeerName) => {
+      this.addPeer(peerName);
+      setTimeout(() => {
+        this.player.sendMovement(peerName);
+      }, 500);
+    });
+    peerConns.connectionClosed.do(peerName => {
+      this.rmPeer(peerName);
+    });
+
+    this.game.initResolve();
   }
 
   update() {
@@ -42,7 +51,6 @@ export default class Scene extends Phaser.Scene {
   }
 
   addPeer(name) {
-    if (this.isBooted) return;
     const gameObj = new Peer(this, this.spawnPoint.x, this.spawnPoint.y, name);
     this.map.addGroundCollider(gameObj.sprite);
     peers.set(name, { gameObj });
