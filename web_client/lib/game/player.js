@@ -1,7 +1,7 @@
 import Human from './human.js';
 
-import * as peers from '../lib/peers.js';
-import * as peerConns from '../lib/peerConns.js';
+import * as peers from '../peers.js';
+import * as peerConns from '../peerConns.js';
 
 export const movementUpdateTerm = 'movementUpdate';
 

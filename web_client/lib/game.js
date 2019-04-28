@@ -1,5 +1,5 @@
 import /* Phaser from */ 'https://cdnjs.cloudflare.com/ajax/libs/phaser/3.16.2/phaser.min.js';
-import Scene from './scene.js';
+import Scene from './game/scene.js';
 
 const config = {
   type: Phaser.AUTO,

@@ -1,11 +1,10 @@
-import /* Phaser from */ 'https://cdnjs.cloudflare.com/ajax/libs/phaser/3.16.2/phaser.min.js';
 import TiledMap from './map.js';
 import Human from './player.js';
 import Player, { movementUpdateTerm } from './player.js';
 import Peer from './peer.js';
 
-import * as peers from '../lib/peers.js';
-import * as peerConns from '../lib/peerConns.js';
+import * as peers from '../peers.js';
+import * as peerConns from '../peerConns.js';
 
 export default class Scene extends Phaser.Scene {
   preload() {

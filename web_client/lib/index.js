@@ -1,6 +1,6 @@
 import * as peerConns from './peerConns.js'
 
-import { init as gameInit } from '../game/index.js'
+import { init as gameInit } from './game.js'
 import { init as nickNameInit } from './nickname.js'
 import { init as messageInit } from './message.js'
 

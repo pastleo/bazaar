@@ -1,4 +1,4 @@
-import { getDefaultScene } from '../game/index.js'
+import { getDefaultScene } from './game.js'
 
 import * as peers from './peers.js'
 import * as peerConns from './peerConns.js'
