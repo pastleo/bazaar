@@ -7,7 +7,7 @@ import { init as messageInit } from './message.js'
 peerConns.setRtcConfig({iceServers: [{urls: 'stun:stun.l.google.com:19302'}]});
 const myName = peerConns.getMyName();
 
-export const phxPeerName = 'phx-wss://unnamed.pastleo.me/peer';
+export const phxPeerName = 'phx-wss://bazaar-ws-peer.pastleo.me/peer';
 
 document.addEventListener('DOMContentLoaded', async () => {
   await Promise.all([

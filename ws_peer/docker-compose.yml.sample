@@ -1,0 +1,27 @@
+version: '2'
+services:
+  # iex:
+  # docker run -it --rm elixir:1.8.1-alpine iex
+  main:
+    image: elixir:1.8.1-alpine
+    container_name: bazaar-ws-peer
+    volumes:
+      - .:/repo
+    restart: always
+    command:
+      - sh
+      - -c
+      - |
+        elixir -e '
+          Enum.each(["_build", "db", "deps"], fn(dirname) ->
+            path = "/root/#{dirname}"
+            link = "/repo/#{dirname}"
+            unless File.exists?(path), do: File.mkdir(path)
+            unless File.exists?(link), do: File.ln_s(path, link)
+          end)
+          IO.puts("folders and links ready")
+        '
+        mix local.hex --force
+        mix local.rebar --force
+        cd /repo && mix deps.get
+        cd /repo && mix phx.server

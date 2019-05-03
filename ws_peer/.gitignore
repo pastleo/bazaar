@@ -1,5 +1,6 @@
 # The directory Mix will write compiled artifacts to.
-/_build/
+_build/
+_build
 
 # If you run "mix test --cover", coverage assets end up here.
 /cover/
@@ -34,3 +35,11 @@ ws_peer-*.tar
 # secrets files as long as you replace their contents by environment
 # variables.
 /config/*.secret.exs
+
+db/
+db
+
+deps/
+deps
+
+docker-compose.yml
