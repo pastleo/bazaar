@@ -1,4 +1,4 @@
-export default class Player {
+class Human {
   static PreloadSprite(scene) {
     scene.load.image('mfwba-idle-1', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/idle/anim1.png');
     scene.load.image('mfwba-idle-2', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/idle/anim2.png');
@@ -15,25 +15,9 @@ export default class Player {
     scene.load.image('mfwba-run-12', '/game/third-party-assets/generic-platformer-pack--bakudas/Player/run/anim12.png');
   }
 
-  static Anims = {
-    Idle: 'player-anims-idle',
-    Run: 'player-anims-run',
-  }
-
-  constructor(scene, x, y) {
-    this.sprite = scene.physics.add
-      .sprite(x, y, 'mfwba-idle-1')
-      .setDrag(500, 0)
-      .setMaxVelocity(150, 200)
-      .setSize(18, 24)
-      .setOffset(7, 9);
-    this.cursor = scene.input.keyboard.createCursorKeys();;
-    this.constructAnims(scene);
-  }
-
-  constructAnims(scene) {
+  static constructAnims(scene) {
     scene.anims.create({
-      key: Player.Anims.Idle,
+      key: Human.Anims.Idle,
       frames: [
         { key: 'mfwba-idle-1' },
         { key: 'mfwba-idle-2' },
@@ -45,7 +29,7 @@ export default class Player {
     });
 
     scene.anims.create({
-      key: Player.Anims.Run,
+      key: Human.Anims.Run,
       frames: [
         { key: 'mfwba-run-5' },
         { key: 'mfwba-run-6' },
@@ -61,30 +45,33 @@ export default class Player {
     });
   }
 
-  update() {
-    const onGround = this.sprite.body.blocked.down;
-    const acceleration = onGround ? 300 : 100;
-    if (this.cursor.left.isDown) {
-      this.sprite.setAccelerationX(-acceleration);
-      this.sprite.setFlipX(true);
-    } else if (this.cursor.right.isDown) {
-      this.sprite.setAccelerationX(acceleration);
-      this.sprite.setFlipX(false);
-    } else {
-      this.sprite.setAccelerationX(0);
-    }
+  constructor(scene, x, y, name) {
+    this.sprite = scene.physics.add
+      .sprite(x, y, 'mfwba-idle-1')
+      .setDrag(500, 0)
+      .setMaxVelocity(150, 200)
+      .setSize(18, 24)
+      .setOffset(7, 9);
 
-    if (onGround && this.cursor.up.isDown) {
-      this.sprite.setVelocityY(-150);
-    }
+    this.text = scene.add.text(
+      this.sprite.x - this.sprite.width / 2,
+      this.sprite.y + this.sprite.height / 2,
+      name || '',
+      { font: "6px Arial", fill: "#ff0044", align: "center" });
+  }
 
-    if (onGround) {
-      if (this.sprite.body.velocity.x !== 0) this.sprite.anims.play(Player.Anims.Run, true);
-      else this.sprite.anims.play(Player.Anims.Idle, true);
-    } else {
-      this.sprite.anims.stop();
-      this.sprite.setTexture('mfwba-run-11');
-    }
+  setTextCoordinate() {
+    this.text.x = Math.floor(this.sprite.x - this.sprite.width / 2);
+    this.text.y = Math.floor(this.sprite.y + this.sprite.height / 2);
+  }
+  setName(name) {
+    this.text.text = name;
   }
 }
 
+Human.Anims = {
+  Idle: 'player-anims-idle',
+  Run: 'player-anims-run',
+}
+
+export default Human

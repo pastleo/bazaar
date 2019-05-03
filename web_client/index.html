@@ -6,12 +6,19 @@
   <link rel="stylesheet" href="css/index.css">
 </head>
 <body>
-  <h1>myName: <span id='my-name'></span></h1>
-  <h1>peerName: <span id='peer-name'></span></h1>
-  <button id='link-start'>link start!</button>
-  <button id='send'>send something</button>
+  <div class='input-line'>
+    <button id='change-nickname'>change my name</button>
+    <input type='text' id='message-input' placeholder='type some message'></input>
+    <button id='message-broadcast'>send</button>
+  </div>
+  <div id='messages-box'>
+  </div>
   <main id='game'></main>
+
+  <template id='message-line-template'>
+    <p><span class='peer-name'></span>: <span class='message-content'></span></p>
+  </template>
+
   <script type="module" src="lib/index.js"></script>
-  <script type="module" src="game/index.js"></script>
 </body>
 </html>
