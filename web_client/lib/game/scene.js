@@ -18,11 +18,7 @@ export default class Scene extends Phaser.Scene {
 
     this.spawnPoint = this.map.getSpwanPoint();
     this.player = new Player(this, this.spawnPoint.x, this.spawnPoint.y);
-    window.player = this.player;
-    this.map.addGroundCollider(this.player.sprite);
-
-    this.cameras.main.startFollow(this.player.sprite);
-    this.cameras.main.setZoom(4);
+    this.cameras.main.startFollow(this.player.container);
 
     peerConns.sent.on(movementUpdateTerm, (movementParams, from) => {
       peers.get(from).gameObj.setMovement(movementParams);
@@ -46,9 +42,12 @@ export default class Scene extends Phaser.Scene {
     });
   }
 
+  addCollider(gameObj) {
+    this.map.addGroundCollider(gameObj);
+  }
+
   addPeer(name) {
     const gameObj = new Peer(this, this.spawnPoint.x, this.spawnPoint.y, name);
-    this.map.addGroundCollider(gameObj.sprite);
     peers.set(name, { gameObj });
   }
 

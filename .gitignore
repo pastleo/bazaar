@@ -1,2 +1,5 @@
 web_client/*-lib
 web_client/index.html
+*-autosave.kra
+*.kra~
+*.png~

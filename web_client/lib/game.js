@@ -6,10 +6,11 @@ const config = {
   width: window.innerWidth,
   height: window.innerHeight,
   parent: 'game',
-  backgroundColor: '#7042e5',
+  backgroundColor: '#fff',
   physics: {
     default: 'arcade',
     arcade: {
+      debug: !!location.href.match(/dev\.html$/),
       gravity: { y: 200 },
     },
   },
