@@ -10,10 +10,8 @@ const myName = peerConns.getMyName();
 export const phxPeerName = 'phx-wss://bazaar-ws-peer.pastleo.me/peer';
 
 document.addEventListener('DOMContentLoaded', async () => {
-  await Promise.all([
-    gameInit(),
-    peerConns.connect(phxPeerName)
-  ]);
+  await gameInit();
+  await peerConns.connect(phxPeerName)
   nickNameInit();
   messageInit();
   findPeers();
