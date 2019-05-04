@@ -7,7 +7,7 @@ window.pc = peerConns;
 peerConns.setRtcConfig({iceServers: [{urls: 'stun:stun.l.google.com:19302'}]});
 const myName = peerConns.getMyName();
 
-const phxPeerName = 'phx-wss://unnamed.pastleo.me/peer';
+const phxPeerName = 'phx-wss://bazaar-ws-peer.pastleo.me/peer';
 
 const msgTerm = 'message';
 

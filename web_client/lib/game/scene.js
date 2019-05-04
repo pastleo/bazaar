@@ -30,9 +30,6 @@ export default class Scene extends Phaser.Scene {
 
     peerConns.newConnectionReady.do((peerName, viaPeerName) => {
       this.addPeer(peerName);
-      setTimeout(() => {
-        this.player.sendMovement(peerName);
-      }, 500);
     });
     peerConns.connectionClosed.do(peerName => {
       this.rmPeer(peerName);

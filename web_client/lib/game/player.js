@@ -11,6 +11,9 @@ export default class Player extends Human {
     this.cursor = scene.input.keyboard.createCursorKeys();
     this.initTouch();
     this.lastMovement = {};
+    peerConns.newConnectionReady.do(peerName => {
+      this.sendMovement(peerName);
+    });
   }
 
   initTouch() {
