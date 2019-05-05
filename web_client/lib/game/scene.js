@@ -7,6 +7,11 @@ import * as peers from '../peers.js';
 import * as peerConns from '../peerConns.js';
 
 export default class Scene extends Phaser.Scene {
+  constructor() {
+    super();
+    this.loadRequests = [];
+  }
+
   preload() {
     TiledMap.PreloadTilesAndMap(this);
     Human.PreloadSprite(this);
@@ -46,6 +51,21 @@ export default class Scene extends Phaser.Scene {
     this.map.addGroundCollider(gameObj);
   }
 
+  async loadAsync(type, ...args) {
+    if (this.loadingAsync) { await new Promise(r => this.loadRequests.push(r)); }
+    this.loadingAsync = true;
+
+    await new Promise(r => {
+      this.load[type](...args);
+      this.load.once('complete', () => r());
+      this.load.start();
+    });
+
+    this.loadingAsync = false;
+    this.loadRequests.forEach(r => r());
+    this.loadRequests = [];
+  }
+
   addPeer(name) {
     const gameObj = new Peer(this, this.spawnPoint.x, this.spawnPoint.y, name);
     peers.set(name, { gameObj });
@@ -61,5 +81,13 @@ export default class Scene extends Phaser.Scene {
 
   setPeerNickName(name, nickName) {
     peers.get(name).gameObj.setName(nickName);
+  }
+
+  setMyAvatar(avatarParams) {
+    return this.player.setAvatar(avatarParams);
+  }
+
+  setPeerAvatar(name, avatarParams) {
+    return peers.get(name).gameObj.setAvatar(avatarParams);
   }
 }

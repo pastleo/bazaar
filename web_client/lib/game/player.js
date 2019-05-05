@@ -72,10 +72,10 @@ export default class Player extends Human {
     }
 
     if (this.onGround) {
-      if (this.container.body.velocity.x !== 0) this.sprite.anims.play(Human.Anims.Run, true);
-      else this.sprite.anims.play(Human.Anims.Idle, true);
+      if (this.container.body.velocity.x !== 0) this.playRunAnim();
+      else this.playIdleAnim();
     } else {
-      this.sprite.anims.play(Human.Anims.Jump, true);
+      this.playJumpAnim();
     }
   }
 
