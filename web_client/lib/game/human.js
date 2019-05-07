@@ -4,6 +4,8 @@ const TextStyle = {
   fontSize: "18px",
   fill: "#ff0044",
 }
+const bodyWidth = 64;
+const bodyHeight = 128;
 
 class Human {
   static PreloadSprite(scene) {
@@ -37,7 +39,7 @@ class Human {
     this.scene = scene;
 
     this.container = this.scene.add.container(x, y);
-    this.container.setSize(64, 128);
+    this.container.setSize(bodyWidth, bodyHeight);
     this.scene.physics.world.enable(this.container);
     this.container.body.setMaxVelocity(150, 200).setDrag(500, 0);
     this.scene.addCollider(this.container)
@@ -98,6 +100,19 @@ class Human {
     });
 
     const newSprite = this.scene.add.sprite(0, 0, spritesheetName);
+    if (frameWidth > bodyWidth || frameHeight > bodyHeight) {
+      let scale;
+      if (frameWidth / frameHeight > bodyWidth / bodyHeight) {
+        scale = bodyWidth / frameWidth;
+        newSprite.y = (bodyHeight - (frameHeight / frameWidth) * bodyWidth) / 2;
+      } else {
+        scale = bodyHeight / frameHeight;
+      }
+      newSprite.scaleX = scale;
+      newSprite.scaleY = scale;
+    } else {
+      newSprite.y = (bodyHeight - frameHeight) / 2;
+    }
     this.container.add(newSprite);
     this.sprite.destroy();
     this.sprite = newSprite;

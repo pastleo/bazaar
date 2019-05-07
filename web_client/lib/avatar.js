@@ -39,13 +39,9 @@ const defaultParams = {
 };
 
 async function promptMyAvatar() {
-  const url = prompt('imgur image URL:');
+  const url = prompt('imgur image URL:', 'https://i.imgur.com/JcehBNb.png');
   if (!url) { return; }
-  const paramsPrompted = prompt(`
-Avator params, default:
-{"frameWidth":64,"frameHeight":128,"idle":{"start":0,"end":4},"run":{"start":5,"end":9},"jump":{"start":10,"end":14}}
-`
-  );
+  const paramsPrompted = prompt('Avator params:', JSON.stringify(defaultParams));
 
   try {
     const newAvatarParams = {

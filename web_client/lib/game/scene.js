@@ -9,7 +9,8 @@ import * as peerConns from '../peerConns.js';
 export default class Scene extends Phaser.Scene {
   constructor() {
     super();
-    this.loadRequests = [];
+    this.created = false;
+    this._waitingForCreatedResolves = [];
   }
 
   preload() {
@@ -36,6 +37,8 @@ export default class Scene extends Phaser.Scene {
       this.rmPeer(peerName);
     });
 
+    this.created = true;
+    setTimeout(() => this._waitingForCreatedResolves.forEach(r => r()));
     this.game.initResolve();
   }
 
@@ -52,18 +55,12 @@ export default class Scene extends Phaser.Scene {
   }
 
   async loadAsync(type, ...args) {
-    if (this.loadingAsync) { await new Promise(r => this.loadRequests.push(r)); }
-    this.loadingAsync = true;
-
+    if (!this.created) { await new Promise(r => this._waitingForCreatedResolves.push(r)); }
     await new Promise(r => {
       this.load[type](...args);
       this.load.once('complete', () => r());
       this.load.start();
     });
-
-    this.loadingAsync = false;
-    this.loadRequests.forEach(r => r());
-    this.loadRequests = [];
   }
 
   addPeer(name) {
