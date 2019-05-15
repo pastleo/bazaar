@@ -46,35 +46,60 @@ export function getConnectedPeerNames() {
   return peers.allNames().filter(peerName => isConnected(peerName))
 }
 
+let log = () => null
+export function setDebug(enabled) {
+  if (enabled) {
+    log = (...args) => console.log(...args);
+  } else {
+    log = () => null;
+  }
+}
+
 export function send(peerName, term, payload = {}) {
+  log(`send [${term}] => (${peerName}) ::`, payload);
   getConnection(peerName).send(term, payload);
 }
 export async function request(peerName, term, payload = {}) {
-  return await getConnection(peerName).request(term, payload);
+  log(`request [${term}] => (${peerName}) ::`, payload);
+  const response = await getConnection(peerName).request(term, payload);
+  log(`request completed [${term}] => (${peerName}) ::`, payload, '<<', response);
+  return response;
 }
 export async function tell(peerName, who, term, payload = {}) {
-  return await getConnection(peerName).tell(who, term, payload);
+  log(`tell [${term}] => (${who} via ${peerName}) ::`, payload);
+  const response = await getConnection(peerName).tell(who, term, payload);
+  log(`tell completed [${term}] => (${who} via ${peerName}) ::`, payload, '<<', response);
+  return response;
 }
 
 function handleEnd(reason, peerName) {
   connectionClosed.emit(peerName, reason);
 }
 function handleSent(term, payload, peerName) {
+  log(`sent [${term}] << (${peerName}) ::`, payload);
   sent.emit(term, payload, peerName);
 }
 function handleRequested(term, payload, peerName) {
-  return requested.emit(term, payload, peerName);
+  log(`requested [${term}] << (${peerName}) ::`, payload);
+  const response = requested.emit(term, payload, peerName);
+  log(`requested [${term}] << (${peerName}) ::`, payload, '>>', response);
+  return response;
 }
 function handleTold(term, from, payload, peerName) {
+  log(`told [${term}] << (${from} via ${peerName}) ::`, payload);
   told.emit(term, from, payload, peerName);
 }
 function handleToldToTell(who, term, payload, peerName) {
+  log(`toldToTell [${term}] << (${who} via ${peerName}) ::`, payload);
+  let response;
   try {
     getConnection(who).toldToTell(peerName, term, payload);
-    return ok;
+    response = ok;
   } catch (_e) {
-    return reasons.UNKNOWN_PEER;
+    response = reasons.UNKNOWN_PEER;
   }
+  log(`toldToTell [${term}] << (${who} via ${peerName}) ::`, payload, '>>', response);
+  return response;
 }
 
 function setupConnection(peerName, viaPeerName, connection) {

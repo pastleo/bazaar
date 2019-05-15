@@ -1,6 +1,8 @@
 import * as peers from './peers.js'
 import * as peerConns from './peerConns.js'
 
+import { randomStr } from './utils.js'
+
 window.ps = peers;
 window.pc = peerConns;
 
@@ -10,6 +12,9 @@ const myName = peerConns.getMyName();
 const phxPeerName = 'phx-wss://bazaar-ws-peer.pastleo.me/peer';
 
 const msgTerm = 'message';
+const stressTerm = 'stress';
+
+//peerConns.setDebug(true);
 
 let peerTemplate, peersBox, messageLineTemplate, messagesBox;
 
@@ -39,6 +44,7 @@ peerConns.newConnectionReady.do((peerName, viaPeerName) => {
   }
   dom.querySelector('.query-peers').onclick = () => queryAndConnectFlow(peerName, dom);
   dom.querySelector('.ping').onclick = () => ping(peerName, dom);
+  dom.querySelector('.stress-test').onclick = () => stressTestStart(peerName, dom);
   dom.querySelector('.disconnect').onclick = () => peerConns.close(peerName);
   peers.set(peerName, { dom });
 });
@@ -72,6 +78,52 @@ async function ping(peerName, dom) {
   const time = await peerConns.ping(peerName);
   showPing(dom.querySelector('.ping'), `(${time})`);
 }
+
+function stressTestStart(peerName, dom) {
+  let
+    stressTesting = true,
+    stressTestingSent = 0,
+    stressTestingRecieved = 0,
+    concurrent = prompt('concurrent?'),
+    concurrentCurr = 0,
+    dataRepeat = prompt('dataRepeat?'),
+    lastStressTestingRecieved = 0;
+
+  dom.querySelector('.stress-test').onclick = () => {
+    stressTesting = false;
+    dom.querySelector('.stress-test').textContent = 'stress test start';
+    dom.querySelector('.stress-test').onclick = () => stressTestStart(peerName, dom);
+  }
+
+  const stressTest = async () => {
+    if (!stressTesting) { return; }
+    if (concurrentCurr < concurrent) {
+      setTimeout(stressTest);
+    }
+    try {
+      concurrentCurr++;
+      const data = randomStr().repeat(dataRepeat);
+      stressTestingSent++;
+      const { data: dataPong } = await peerConns.request(peerName, stressTerm, { data });
+      if (data === dataPong) {
+        stressTestingRecieved++;
+      }
+    } finally {}
+    setTimeout(stressTest);
+  }
+  const showStress = () => {
+    if (!stressTesting) { return; }
+    dom.querySelector('.stress-test').textContent =
+      `stress testing... (${stressTestingRecieved} / ${stressTestingSent}, ${stressTestingRecieved / stressTestingSent * 100}, ${stressTestingRecieved - lastStressTestingRecieved}/s)`;
+    lastStressTestingRecieved = stressTestingRecieved;
+
+    setTimeout(showStress, 1000);
+  }
+
+  stressTest(peerName, dom);
+  showStress(dom);
+}
+peerConns.requested.on(stressTerm, ({ data }) => ({ data }));
 
 function broadcastMessage() {
   const msg = document.getElementById('message-input').value;
