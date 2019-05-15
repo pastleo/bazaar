@@ -50,40 +50,32 @@ export default class Player extends Human {
   }
 
   update() {
-    this.onGround = this.sprite.body.blocked.down;
+    this.onGround = this.container.body.blocked.down;
     const acceleration = this.onGround ? 300 : 100;
     if (this.cursor.left.isDown || this.dragLeftIsDown) {
-      this.sprite.setAccelerationX(-acceleration);
+      this.container.body.setAccelerationX(-acceleration);
       this.sprite.setFlipX(true);
       this.broadcaseMovement({ ax: -acceleration, flip: 'x' });
     } else if (this.cursor.right.isDown || this.dragRightIsDown) {
-      this.sprite.setAccelerationX(acceleration);
+      this.container.body.setAccelerationX(acceleration);
       this.sprite.setFlipX(false);
       this.broadcaseMovement({ ax: acceleration, flip: 'n' });
     } else {
-      this.sprite.setAccelerationX(0);
+      this.container.body.setAccelerationX(0);
       this.broadcaseMovement({ ax: 0 });
     }
 
     if (this.onGround && (this.cursor.up.isDown || this.swipeUp)) {
       this.swipeUp = false;
-      this.sprite.setVelocityY(-150);
+      this.container.body.setVelocityY(-150);
       this.broadcaseMovement({ vy: -150 });
     }
 
     if (this.onGround) {
-      if (this.sprite.body.velocity.x !== 0) this.sprite.anims.play(Player.Anims.Run, true);
-      else this.sprite.anims.play(Player.Anims.Idle, true);
+      if (this.container.body.velocity.x !== 0) this.playRunAnim();
+      else this.playIdleAnim();
     } else {
-      this.sprite.anims.stop();
-      this.sprite.setTexture('mfwba-run-11');
-    }
-
-    if (
-      this.sprite.body.velocity.x !== 0 ||
-      this.sprite.body.velocity.y !== 0
-    ) {
-      this.setTextCoordinate();
+      this.playJumpAnim();
     }
   }
 
@@ -109,8 +101,8 @@ export default class Player extends Human {
   sendMovement(peerName, params = {}) {
     setTimeout(() => {
       peerConns.send(peerName, movementUpdateTerm, {
-        x: this.sprite.x,
-        y: this.sprite.y,
+        x: this.container.x,
+        y: this.container.y,
         ...params,
       });
     })

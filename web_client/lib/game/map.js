@@ -1,20 +1,20 @@
 export default class TiledMap {
   static PreloadTilesAndMap(scene) {
-    scene.load.image('gpp-tiles', '/game/third-party-assets/generic-platformer-pack--bakudas/atlas.png');
-    scene.load.tilemapTiledJSON('map', '/game/assets/tiled-map.json');
+    scene.load.image('gpp-tiles', 'game/atlas.png');
+    scene.load.tilemapTiledJSON('map', 'game/map.json');
   }
 
   constructor(scene) {
     this.scene = scene;
 
     this.map = scene.make.tilemap({ key: 'map' });
-    this.tileset = this.map.addTilesetImage('generic-platformer-pack', 'gpp-tiles');
+    this.tileset = this.map.addTilesetImage('atlas', 'gpp-tiles');
 
-    this.cloudLayer = this.map.createStaticLayer('Cloud', this.tileset, 0, 0);
-    this.groundLayer = this.map.createStaticLayer('Ground', this.tileset, 0, 0);
-    this.labberLayer = this.map.createStaticLayer('Labber', this.tileset, 0, 0);
+    this.decorLayer = this.map.createStaticLayer('decor', this.tileset, 0, 0);
+    this.landLayer = this.map.createStaticLayer('land', this.tileset, 0, 0);
+    this.ladderLayer = this.map.createStaticLayer('ladder', this.tileset, 0, 0);
 
-    this.groundLayer.setCollisionByProperty({ collides: true });
+    this.landLayer.setCollisionByProperty({ collides: true });
   }
 
   getSpwanPoint() {
@@ -25,6 +25,6 @@ export default class TiledMap {
   }
 
   addGroundCollider(gameObject) {
-    this.scene.physics.add.collider(this.groundLayer, gameObject);
+    this.scene.physics.add.collider(this.landLayer, gameObject);
   }
 }

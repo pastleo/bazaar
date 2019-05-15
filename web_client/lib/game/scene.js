@@ -7,6 +7,12 @@ import * as peers from '../peers.js';
 import * as peerConns from '../peerConns.js';
 
 export default class Scene extends Phaser.Scene {
+  constructor() {
+    super();
+    this.created = false;
+    this._waitingForCreatedResolves = [];
+  }
+
   preload() {
     TiledMap.PreloadTilesAndMap(this);
     Human.PreloadSprite(this);
@@ -18,11 +24,7 @@ export default class Scene extends Phaser.Scene {
 
     this.spawnPoint = this.map.getSpwanPoint();
     this.player = new Player(this, this.spawnPoint.x, this.spawnPoint.y);
-    window.player = this.player;
-    this.map.addGroundCollider(this.player.sprite);
-
-    this.cameras.main.startFollow(this.player.sprite);
-    this.cameras.main.setZoom(4);
+    this.cameras.main.startFollow(this.player.container);
 
     peerConns.sent.on(movementUpdateTerm, (movementParams, from) => {
       peers.get(from).gameObj.setMovement(movementParams);
@@ -35,6 +37,8 @@ export default class Scene extends Phaser.Scene {
       this.rmPeer(peerName);
     });
 
+    this.created = true;
+    setTimeout(() => this._waitingForCreatedResolves.forEach(r => r()));
     this.game.initResolve();
   }
 
@@ -46,9 +50,21 @@ export default class Scene extends Phaser.Scene {
     });
   }
 
+  addCollider(gameObj) {
+    this.map.addGroundCollider(gameObj);
+  }
+
+  async loadAsync(type, ...args) {
+    if (!this.created) { await new Promise(r => this._waitingForCreatedResolves.push(r)); }
+    await new Promise(r => {
+      this.load[type](...args);
+      this.load.once('complete', () => r());
+      this.load.start();
+    });
+  }
+
   addPeer(name) {
     const gameObj = new Peer(this, this.spawnPoint.x, this.spawnPoint.y, name);
-    this.map.addGroundCollider(gameObj.sprite);
     peers.set(name, { gameObj });
   }
 
@@ -62,5 +78,13 @@ export default class Scene extends Phaser.Scene {
 
   setPeerNickName(name, nickName) {
     peers.get(name).gameObj.setName(nickName);
+  }
+
+  setMyAvatar(avatarParams) {
+    return this.player.setAvatar(avatarParams);
+  }
+
+  setPeerAvatar(name, avatarParams) {
+    return peers.get(name).gameObj.setAvatar(avatarParams);
   }
 }
