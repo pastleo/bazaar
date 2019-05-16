@@ -30,11 +30,11 @@ export default class Scene extends Phaser.Scene {
       peers.get(from).gameObj.setMovement(movementParams);
     });
 
-    peerConns.newConnectionReady.do((peerName, viaPeerName) => {
-      this.addPeer(peerName);
+    peerConns.newConnectionReady.do((peerId, viaPeerId) => {
+      this.addPeer(peerId);
     });
-    peerConns.connectionClosed.do(peerName => {
-      this.rmPeer(peerName);
+    peerConns.connectionClosed.do(peerId => {
+      this.rmPeer(peerId);
     });
 
     this.created = true;
@@ -44,8 +44,8 @@ export default class Scene extends Phaser.Scene {
 
   update() {
     this.player.update();
-    peers.allNames().forEach(peerName => {
-      const gameObj = peers.get(peerName).gameObj;
+    peers.allIds().forEach(peerId => {
+      const gameObj = peers.get(peerId).gameObj;
       if (gameObj) { gameObj.update(); }
     });
   }
@@ -63,28 +63,28 @@ export default class Scene extends Phaser.Scene {
     });
   }
 
-  addPeer(name) {
-    const gameObj = new Peer(this, this.spawnPoint.x, this.spawnPoint.y, name);
-    peers.set(name, { gameObj });
+  addPeer(id) {
+    const gameObj = new Peer(this, this.spawnPoint.x, this.spawnPoint.y, id);
+    peers.set(id, { gameObj });
   }
 
-  rmPeer(name) {
-    peers.get(name).gameObj.destory();
+  rmPeer(id) {
+    peers.get(id).gameObj.destory();
   }
 
   setMyNickName(name) {
     this.player.setName(name);
   }
 
-  setPeerNickName(name, nickName) {
-    peers.get(name).gameObj.setName(nickName);
+  setPeerNickName(id, nickName) {
+    peers.get(id).gameObj.setName(nickName);
   }
 
   setMyAvatar(avatarParams) {
     return this.player.setAvatar(avatarParams);
   }
 
-  setPeerAvatar(name, avatarParams) {
-    return peers.get(name).gameObj.setAvatar(avatarParams);
+  setPeerAvatar(id, avatarParams) {
+    return peers.get(id).gameObj.setAvatar(avatarParams);
   }
 }

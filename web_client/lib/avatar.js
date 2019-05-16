@@ -8,7 +8,6 @@ const localStorageKey = 'avatar';
 const acceptedImageHosts = [
   'i.imgur.com'
 ];
-const myName = peerConns.getMyName();
 let avatarParams;
 
 export async function init() {
@@ -18,9 +17,9 @@ export async function init() {
     try { await setMyAvatar(JSON.parse(existingAvatarParams)) } catch (e) { console.error(e.message); }
   }
 
-  peerConns.newConnectionReady.do((peerName, viaPeerName) => {
+  peerConns.newConnectionReady.do(peerId => {
     if (avatarParams) {
-      peerConns.getConnection(peerName).send(avatarTerm, { avatarParams });
+      peerConns.getConnection(peerId).send(avatarTerm, { avatarParams });
     }
   });
 

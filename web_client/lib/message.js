@@ -4,7 +4,7 @@ import * as peerConns from './peerConns.js'
 import { getMyNickName, getPeerNickName } from './nickname.js'
 
 const msgTerm = 'message';
-const myName = peerConns.getMyName();
+const myId = peerConns.getMyId();
 let messageLineTemplate, messagesBox
 
 export function init() {
@@ -25,7 +25,7 @@ function broadcastMessage() {
   const msg = document.getElementById('message-input').value;
   if (msg) {
     peerConns.broadcast(msgTerm, { msg })
-    addMessage(myName, msg);
+    addMessage(myId, msg);
     document.getElementById('message-input').value = '';
   }
 }
@@ -36,7 +36,7 @@ function addMessage(from, msg) {
   if (messagesBox.children.length > 10) {
     messagesBox.children[0].remove();
   }
-  dom.querySelector('.peer-name').textContent = from === myName ? getMyNickName() : getPeerNickName(from);
+  dom.querySelector('.peer-name').textContent = from === myId ? getMyNickName() : getPeerNickName(from);
   dom.querySelector('.message-content').textContent = msg;
 }
 

@@ -6,13 +6,13 @@ import { init as messageInit } from './message.js'
 import { init as avatarInit } from './avatar.js'
 
 peerConns.setRtcConfig({iceServers: [{urls: 'stun:stun.l.google.com:19302'}]});
-const myName = peerConns.getMyName();
+const myId = peerConns.getMyId();
 
-export const phxPeerName = 'phx-wss://bazaar-ws-peer.pastleo.me/peer';
+export const phxPeerId = 'phx-wss://bazaar-ws-peer.pastleo.me/peer';
 
 document.addEventListener('DOMContentLoaded', async () => {
   await gameInit();
-  await peerConns.connect(phxPeerName)
+  await peerConns.connect(phxPeerId)
   await avatarInit();
   nickNameInit();
   messageInit();
@@ -21,9 +21,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function findPeers() {
-  const peersToConnect = (await peerConns.queryPeers(phxPeerName)).filter(p => p !== myName && !peerConns.isConnected(p));
+  const peersToConnect = (await peerConns.queryPeers(phxPeerId)).filter(p => p !== myId && !peerConns.isConnected(p));
   for(const peer of peersToConnect) {
-    await peerConns.connect(peer, phxPeerName);
+    await peerConns.connect(peer, phxPeerId);
   }
 }
 

@@ -7,9 +7,9 @@ window.ps = peers;
 window.pc = peerConns;
 
 peerConns.setRtcConfig({iceServers: [{urls: 'stun:stun.l.google.com:19302'}]});
-const myName = peerConns.getMyName();
+const myId = peerConns.getMyId();
 
-const phxPeerName = 'phx-wss://bazaar-ws-peer.pastleo.me/peer';
+const phxPeerId = 'phx-wss://bazaar-ws-peer.pastleo.me/peer';
 
 const msgTerm = 'message';
 const stressTerm = 'stress';
@@ -19,10 +19,10 @@ const stressTerm = 'stress';
 let peerTemplate, peersBox, messageLineTemplate, messagesBox;
 
 document.addEventListener('DOMContentLoaded', async () => {
-  document.getElementById('my-name').textContent = myName;
-  document.getElementById('title').text = `[${myName}] unnamed web client`;
+  document.getElementById('my-name').textContent = myId;
+  document.getElementById('title').text = `[${myId}] unnamed web client`;
 
-  document.getElementById('direct-connect-name').value = phxPeerName;
+  document.getElementById('direct-connect-name').value = phxPeerId;
   document.getElementById('direct-connect').onclick = directConnect;
   document.getElementById('message-broadcast').onclick = broadcastMessage;
 
@@ -31,26 +31,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   messageLineTemplate = document.getElementById('message-line-template').content.children[0];
   messagesBox = document.getElementById('messages-box');
 
-  peerConns.connect(phxPeerName);
+  peerConns.connect(phxPeerId);
 });
 
-peerConns.newConnectionReady.do((peerName, viaPeerName) => {
+peerConns.newConnectionReady.do((peerId, viaPeerId) => {
   const dom = document.importNode(peerTemplate, true);
   peersBox.appendChild(dom);
-  dom.querySelector('.name').textContent = peerName;
-  if (viaPeerName) {
-    dom.querySelector('.via').textContent = viaPeerName || '';
+  dom.querySelector('.name').textContent = peerId;
+  if (viaPeerId) {
+    dom.querySelector('.via').textContent = viaPeerId || '';
     dom.querySelector('.via-container').classList.add('shown');
   }
-  dom.querySelector('.query-peers').onclick = () => queryAndConnectFlow(peerName, dom);
-  dom.querySelector('.ping').onclick = () => ping(peerName, dom);
-  dom.querySelector('.stress-test').onclick = () => stressTestStart(peerName, dom);
-  dom.querySelector('.disconnect').onclick = () => peerConns.close(peerName);
-  peers.set(peerName, { dom });
+  dom.querySelector('.query-peers').onclick = () => queryAndConnectFlow(peerId, dom);
+  dom.querySelector('.ping').onclick = () => ping(peerId, dom);
+  dom.querySelector('.stress-test').onclick = () => stressTestStart(peerId, dom);
+  dom.querySelector('.disconnect').onclick = () => peerConns.close(peerId);
+  peers.set(peerId, { dom });
 });
 
-peerConns.connectionClosed.do(peerName => {
-  peers.get(peerName).dom.remove();
+peerConns.connectionClosed.do(peerId => {
+  peers.get(peerId).dom.remove();
 });
 
 function directConnect() {
@@ -63,23 +63,23 @@ async function queryAndConnectFlow(peerVia, dom) {
   select.classList.add('shown');
   const [peer, ] = await selectPromise(
     select,
-    peers.filter(p => p !== myName).map(p => [p, p])
+    peers.filter(p => p !== myId).map(p => [p, p])
   );
   select.classList.remove('shown');
   peerConns.connect(peer, peerVia);
 }
 
-peerConns.requested.on('ping', (_, peerName) => {
-  showPing(peers.get(peerName).dom.querySelector('.ping'), '*');
+peerConns.requested.on('ping', (_, peerId) => {
+  showPing(peers.get(peerId).dom.querySelector('.ping'), '*');
   return {};
 });
 
-async function ping(peerName, dom) {
-  const time = await peerConns.ping(peerName);
+async function ping(peerId, dom) {
+  const time = await peerConns.ping(peerId);
   showPing(dom.querySelector('.ping'), `(${time})`);
 }
 
-function stressTestStart(peerName, dom) {
+function stressTestStart(peerId, dom) {
   let
     stressTesting = true,
     stressTestingSent = 0,
@@ -92,7 +92,7 @@ function stressTestStart(peerName, dom) {
   dom.querySelector('.stress-test').onclick = () => {
     stressTesting = false;
     dom.querySelector('.stress-test').textContent = 'stress test start';
-    dom.querySelector('.stress-test').onclick = () => stressTestStart(peerName, dom);
+    dom.querySelector('.stress-test').onclick = () => stressTestStart(peerId, dom);
   }
 
   const stressTest = async () => {
@@ -104,7 +104,7 @@ function stressTestStart(peerName, dom) {
       concurrentCurr++;
       const data = randomStr().repeat(dataRepeat);
       stressTestingSent++;
-      const { data: dataPong } = await peerConns.request(peerName, stressTerm, { data });
+      const { data: dataPong } = await peerConns.request(peerId, stressTerm, { data });
       if (data === dataPong) {
         stressTestingRecieved++;
       }
@@ -120,7 +120,7 @@ function stressTestStart(peerName, dom) {
     setTimeout(showStress, 1000);
   }
 
-  stressTest(peerName, dom);
+  stressTest(peerId, dom);
   showStress(dom);
 }
 peerConns.requested.on(stressTerm, ({ data }) => ({ data }));
@@ -128,7 +128,7 @@ peerConns.requested.on(stressTerm, ({ data }) => ({ data }));
 function broadcastMessage() {
   const msg = document.getElementById('message-input').value;
   peerConns.broadcast(msgTerm, { msg })
-  addMessage(myName, msg);
+  addMessage(myId, msg);
 }
 peerConns.sent.on(msgTerm, ({ msg }, from) => {
   addMessage(from, msg);

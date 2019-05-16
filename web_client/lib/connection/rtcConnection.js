@@ -12,21 +12,21 @@ class RtcConnection extends Connection {
     this._waitingForStartLinkResolves = [];
   }
 
-  startLink(peerName, connectRequestOpt) {
+  startLink(peerId, connectRequestOpt) {
     const { offer, onOfferCreated, connectionId, timeout } = connectRequestOpt || {};
     this.connectionId = connectionId || randomStr();
-    this.peerName = peerName;
+    this.peerId = peerId;
 
     return new Promise((resolve, reject) => {
       this.connectionVia.onTold(`ice:${this.connectionId}`, (from, { ice }) => {
-        if (this.peerName === from) {
+        if (this.peerId === from) {
           this.rtcConnection.addIceCandidate(JSON.parse(ice));
         }
       });
 
       this.rtcConnection.onicecandidate = ({ candidate }) => {
         if (candidate) {
-          this.connectionVia.tell(this.peerName, `ice:${this.connectionId}`, {
+          this.connectionVia.tell(this.peerId, `ice:${this.connectionId}`, {
             ice: JSON.stringify(candidate),
           }).catch(e => this._rtcEstConnErr(e, reject));
         }
@@ -66,7 +66,7 @@ class RtcConnection extends Connection {
         this._setupChannels(this.rtcConnection.createDataChannel('response'), resolve);
 
         this.connectionVia.onTold(`answer:${this.connectionId}`, (from, { answer }) => {
-          if (this.peerName === from) {
+          if (this.peerId === from) {
             this.rtcConnection.setRemoteDescription(JSON.parse(answer));
           }
         });
@@ -90,7 +90,7 @@ class RtcConnection extends Connection {
     await this.rtcConnection.setLocalDescription(createdAnswer);
     const answer = JSON.stringify(this.rtcConnection.localDescription);
 
-    await this.connectionVia.tell(this.peerName, `answer:${this.connectionId}`, { answer });
+    await this.connectionVia.tell(this.peerId, `answer:${this.connectionId}`, { answer });
   }
 
   _setupChannels(channel, startLinkResolve) {
@@ -158,29 +158,29 @@ class RtcConnection extends Connection {
     if (!this.closed) {
       this.closed = true;
       this.rtcConnection.close();
-      this._onEnd(reason, this.peerName);
+      this._onEnd(reason, this.peerId);
     }
   }
 
   async _onSendChannelMessage(data) {
     if (!this.connected) { await new Promise(r => this._waitingForStartLinkResolves.push(r)); }
     const { term, payload } = JSON.parse(data);
-    this._onSents.emit(term, payload, this.peerName);
+    this._onSents.emit(term, payload, this.peerId);
   }
   async _onRequestChannelMessage(data) {
     if (!this.connected) { await new Promise(r => this._waitingForStartLinkResolves.push(r)); }
     const { id, term, payload } = JSON.parse(data);
-    this._sendResponse(id, () => this._onRequesteds.emit(term, payload, this.peerName));
+    this._sendResponse(id, () => this._onRequesteds.emit(term, payload, this.peerId));
   }
   async _onTellChannelMessage(data) {
     if (!this.connected) { await new Promise(r => this._waitingForStartLinkResolves.push(r)); }
     const { id, who, term, payload } = JSON.parse(data);
-    this._sendResponse(id, () => this._onToldToTell(who, term, payload, this.peerName));
+    this._sendResponse(id, () => this._onToldToTell(who, term, payload, this.peerId));
   }
   async _onToldChannelMessage(data) {
     if (!this.connected) { await new Promise(r => this._waitingForStartLinkResolves.push(r)); }
     const { from, term, payload } = JSON.parse(data);
-    this._onTolds.emit(term, from, payload, this.peerName);
+    this._onTolds.emit(term, from, payload, this.peerId);
   }
   async _onResponseChannelMessage(data) {
     if (!this.connected) { await new Promise(r => this._waitingForStartLinkResolves.push(r)); }

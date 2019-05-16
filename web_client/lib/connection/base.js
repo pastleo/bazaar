@@ -10,24 +10,24 @@ class Connection {
     this._onToldToTell = () => null;
   }
 
-  async startLink(peerName) {
-    throw new Error("startLink(peerName) not implemented");
+  async startLink(peerId) {
+    throw new Error("startLink(peerId) not implemented");
   }
   close() {
     throw new Error("close() not implemented");
   }
 
-  onEnd(callback) { // callback: (reason, peerName)
+  onEnd(callback) { // callback: (reason, peerId)
     this._onEnd = callback;
   }
 
   send(term, payload = {}) {
     throw new Error("send(term, payload) not implemented");
   }
-  onSent(term, callback) { // callback: (payload, peerName)
+  onSent(term, callback) { // callback: (payload, peerId)
     this._onSents.on(term, callback);
   }
-  defSent(callback) { // callback: (term, payload, peerName)
+  defSent(callback) { // callback: (term, payload, peerId)
     this._onSents.def(callback);
   }
   offSent(term) {
@@ -37,10 +37,10 @@ class Connection {
   async request(term, payload = {}) { // => resolve(response) | reject('TIMEOUT') | reject('UNHANDLED')
     throw new Error("request(term, payload) not implemented");
   }
-  onRequested(term, callback) { // callback: (payload, peerName) => response
+  onRequested(term, callback) { // callback: (payload, peerId) => response
     this._onRequesteds.on(term, callback);
   }
-  defRequested(callback) { // callback: (term, payload, peerName) => response | throw 'UNHANDLED'
+  defRequested(callback) { // callback: (term, payload, peerId) => response | throw 'UNHANDLED'
     this._onRequesteds.def(callback);
   }
   offRequesteds(term) {
@@ -50,17 +50,17 @@ class Connection {
   async tell(who, term, payload = {}) { // => resolve('ok') | reject('UNKNOWN_PEER') | reject('TIMEOUT') | reject('UNHANDLED')
     throw new Error("tell(who, term, payload) not implemented");
   }
-  onTold(term, callback) { // callback: (from, payload, peerName)
+  onTold(term, callback) { // callback: (from, payload, peerId)
     this._onTolds.on(term, callback);
   }
-  defTold(callback) { // callback: (term, from, payload, peerName)
+  defTold(callback) { // callback: (term, from, payload, peerId)
     this._onTolds.def(callback);
   }
   offTold(term) {
     this._onTolds.off(term);
   }
 
-  onToldToTell(callback) { // callback: (who, term, payload, peerName) => 'ok' | throw 'UNKNOWN_PEER' | throw 'UNHANDLED'
+  onToldToTell(callback) { // callback: (who, term, payload, peerId) => 'ok' | throw 'UNKNOWN_PEER' | throw 'UNHANDLED'
     this._onToldToTell = callback
   }
   toldToTell(from, term, payload = {}) {
