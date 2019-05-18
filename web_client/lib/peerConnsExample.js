@@ -9,7 +9,8 @@ window.pc = peerConns;
 peerConns.setRtcConfig({iceServers: [{urls: 'stun:stun.l.google.com:19302'}]});
 const myId = peerConns.getMyId();
 
-const phxPeerId = 'phx-wss://bazaar-ws-peer.pastleo.me/peer';
+const phxPeerIdLocalStorageKey = 'phxPeerId';
+const defaultPhxPeerId = 'phx-wss://bazaar-ws-peer.pastleo.me/peer';
 
 const msgTerm = 'message';
 const stressTerm = 'stress';
@@ -19,10 +20,10 @@ const stressTerm = 'stress';
 let peerTemplate, peersBox, messageLineTemplate, messagesBox;
 
 document.addEventListener('DOMContentLoaded', async () => {
-  document.getElementById('my-name').textContent = myId;
+  document.getElementById('my-id').textContent = myId;
   document.getElementById('title').text = `[${myId}] unnamed web client`;
 
-  document.getElementById('direct-connect-name').value = phxPeerId;
+  document.getElementById('direct-connect-name').value = defaultPhxPeerId;
   document.getElementById('direct-connect').onclick = directConnect;
   document.getElementById('message-broadcast').onclick = broadcastMessage;
 
@@ -31,6 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   messageLineTemplate = document.getElementById('message-line-template').content.children[0];
   messagesBox = document.getElementById('messages-box');
 
+  const phxPeerId = localStorage.getItem(phxPeerIdLocalStorageKey) || defaultPhxPeerId;
   peerConns.connect(phxPeerId);
 });
 
@@ -54,18 +56,21 @@ peerConns.connectionClosed.do(peerId => {
 });
 
 function directConnect() {
-  peerConns.connect(document.getElementById('direct-connect-name').value)
+  const phxPeerId = document.getElementById('direct-connect-name').value;
+  peerConns.connect(phxPeerId)
+  localStorage.setItem(phxPeerIdLocalStorageKey, phxPeerId);
 }
 
 async function queryAndConnectFlow(peerVia, dom) {
   const peers = await peerConns.queryPeers(peerVia);
-  const select = dom.querySelector('.connect-select')
-  select.classList.add('shown');
+  const connectCtl = dom.querySelector('.connect-ctl');
+  const select = dom.querySelector('.connect-select');
+  connectCtl.classList.add('shown');
   const [peer, ] = await selectPromise(
     select,
     peers.filter(p => p !== myId).map(p => [p, p])
   );
-  select.classList.remove('shown');
+  connectCtl.classList.remove('shown');
   peerConns.connect(peer, peerVia);
 }
 
@@ -79,20 +84,30 @@ async function ping(peerId, dom) {
   showPing(dom.querySelector('.ping'), `(${time})`);
 }
 
-function stressTestStart(peerId, dom) {
+async function stressTestStart(peerId, dom) {
+  const stressBtn = dom.querySelector('.stress-test');
+  const stressCtl = dom.querySelector('.stress-ctl');
+  const stressShow = dom.querySelector('.stress-show');
+  stressCtl.classList.add('shown');
+  await clickPromise(dom.querySelector('.stress-test-start'));
+  stressCtl.classList.remove('shown');
+  stressShow.classList.add('shown');
+  stressBtn.textContent = 'stress test stop';
+
   let
     stressTesting = true,
     stressTestingSent = 0,
     stressTestingRecieved = 0,
-    concurrent = prompt('concurrent?'),
+    concurrent = dom.querySelector('.concurrent').value,
     concurrentCurr = 0,
-    dataRepeat = prompt('dataRepeat?'),
-    lastStressTestingRecieved = 0;
+    dataLength = dom.querySelector('.data-length').value,
+    lastStressTestingRecieved = 0,
+    startTime = Date.now();
 
   dom.querySelector('.stress-test').onclick = () => {
     stressTesting = false;
-    dom.querySelector('.stress-test').textContent = 'stress test start';
-    dom.querySelector('.stress-test').onclick = () => stressTestStart(peerId, dom);
+    stressBtn.textContent = 'stress test start';
+    stressBtn.onclick = () => stressTestStart(peerId, dom);
   }
 
   const stressTest = async () => {
@@ -102,7 +117,8 @@ function stressTestStart(peerId, dom) {
     }
     try {
       concurrentCurr++;
-      const data = randomStr().repeat(dataRepeat);
+      const randStr = randomStr();
+      const data = randStr.repeat(Math.floor(dataLength / randStr.length));
       stressTestingSent++;
       const { data: dataPong } = await peerConns.request(peerId, stressTerm, { data });
       if (data === dataPong) {
@@ -112,12 +128,13 @@ function stressTestStart(peerId, dom) {
     setTimeout(stressTest);
   }
   const showStress = () => {
-    if (!stressTesting) { return; }
-    dom.querySelector('.stress-test').textContent =
-      `stress testing... (${stressTestingRecieved} / ${stressTestingSent}, ${stressTestingRecieved / stressTestingSent * 100}, ${stressTestingRecieved - lastStressTestingRecieved}/s)`;
+    stressShow.textContent =
+      `${stressTesting ? 'stress testing...' : 'stress test result:'} ${stressTestingRecieved} recieved / ${stressTestingSent} sent, ${stressTestingRecieved / stressTestingSent * 100}% recieved, ${stressTestingRecieved - lastStressTestingRecieved} requests in last second, ${stressTestingRecieved / (Date.now() - startTime) * 1000} requests per second in average`;
     lastStressTestingRecieved = stressTestingRecieved;
 
-    setTimeout(showStress, 1000);
+    if (stressTesting) {
+      setTimeout(showStress, 1000);
+    }
   }
 
   stressTest(peerId, dom);
@@ -152,6 +169,12 @@ function selectPromise(selectDOM, options) {
         resolve(optionMap[selectDOM.value]);
       }
     };
+  });
+}
+
+function clickPromise(dom) {
+  return new Promise(resolve => {
+    dom.addEventListener('click', () => resolve(), {once: true});
   });
 }
 
