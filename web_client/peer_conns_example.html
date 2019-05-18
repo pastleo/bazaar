@@ -21,7 +21,7 @@
     .peer-container .via-container:not(.shown) {
       display: none;
     }
-    .peer-container select:not(.shown) {
+    .peer-container .second-ctl-line:not(.shown) {
       display: none;
     }
     .peer-container .second-ctl-line {
@@ -34,10 +34,13 @@
     .input-line input {
       flex: 1;
     }
+    .peer-container .stress-show:not(.shown) {
+      display: none;
+    }
   </style>
 </head>
 <body>
-  <h1>myName: <span id='my-name'></span></h1>
+  <h1>id: <span id='my-id'></span></h1>
   <div class='input-line'>
     <input type='text' id='direct-connect-name'></input><button id='direct-connect'>direct connect</button>
   </div>
@@ -56,12 +59,18 @@
       <div>
         <button class='ping'>ping</button>
         <button class='query-peers'>queryPeers and connect</button>
+        <button class='stress-test'>stress test</button>
         <button class='disconnect'>disconnect</button>
       </div>
-      <div class='second-ctl-line'>
+      <div class='second-ctl-line connect-ctl'>
         <select class='connect-select'><option value=''>choose a peer to connect</option></select>
-        <select class='change-via-select'><option value=''>choose a peer to change via</option></select>
       </div>
+      <div class='second-ctl-line stress-ctl'>
+        <input type='text' class='concurrent' placeholder='concurrent' />
+        <input type='text' class='data-length' placeholder='data length (string length)' />
+        <button class='stress-test-start'>stress test start</button>
+      </div>
+      <p class='stress-show'></p>
     </div>
   </template>
   <template id='message-line-template'>

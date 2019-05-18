@@ -11,8 +11,8 @@ export default class Player extends Human {
     this.cursor = scene.input.keyboard.createCursorKeys();
     this.initTouch();
     this.lastMovement = {};
-    peerConns.newConnectionReady.do(peerName => {
-      this.sendMovement(peerName);
+    peerConns.newConnectionReady.do(peerId => {
+      this.sendMovement(peerId);
     });
   }
 
@@ -89,7 +89,7 @@ export default class Player extends Human {
       this.lastMovement.vy === params.vy &&
       this.lastMovement.flip === params.flip
     ) { return; }
-    peerConns.getConnectedPeerNames().filter(p => {
+    peerConns.getConnectedPeerIds().filter(p => {
       const gameObj = peers.get(p).gameObj;
       return gameObj && !gameObj.destroyed;
     }).forEach(p => {
@@ -98,9 +98,9 @@ export default class Player extends Human {
     this.lastMovement = params;
   }
 
-  sendMovement(peerName, params = {}) {
+  sendMovement(peerId, params = {}) {
     setTimeout(() => {
-      peerConns.send(peerName, movementUpdateTerm, {
+      peerConns.send(peerId, movementUpdateTerm, {
         x: this.container.x,
         y: this.container.y,
         ...params,

@@ -11,127 +11,152 @@ const pingTerm = 'ping';
 
 const phxWsRegex = /^phx-(wss?):\/\/(.+)/
 
-let myName = randomStr()
+let myId = randomStr()
 let rtcConfig = {}
 
 export function setRtcConfig(_rtcConfig) {
   rtcConfig = _rtcConfig;
 }
-export function getMyName() {
-  return myName.slice(0, myName.length);
+export function getMyId() {
+  return myId.slice(0, myId.length);
 }
 
-export const newConnectionReady = new EventHub(); // .on((peerName, viaPeerName, connection) => {})
-export const connectionClosed = new EventHub(); // .on((peerName, reason) => {})
+export const newConnectionReady = new EventHub(); // .on((peerId, viaPeerId, connection) => {})
+export const connectionClosed = new EventHub(); // .on((peerId, reason) => {})
 
-export const sent = new EventSwitch('sent'); // .on(term, (payload, peerName) => {})
-export const requested = new EventSwitch('requested'); // .on(term, (payload, peerName) => response)
-export const told = new EventSwitch('told'); // .on(term, (from, payload, peerName) => {})
+export const sent = new EventSwitch('sent'); // .on(term, (payload, peerId) => {})
+export const requested = new EventSwitch('requested'); // .on(term, (payload, peerId) => response)
+export const told = new EventSwitch('told'); // .on(term, (from, payload, peerId) => {})
 
-export function getConnection(peerName) {
-  const connection = peers.get(peerName).connection;
+export function getConnection(peerId) {
+  const connection = peers.get(peerId).connection;
   if (!connection) {
-    throw new Error(`connection not found for ${peerName}`);
+    throw new Error(`connection not found for ${peerId}`);
   }
   if (connection.closed) {
-    throw new Error(`connection to ${peerName} is closed`);
+    throw new Error(`connection to ${peerId} is closed`);
   }
   return connection;
 }
-export function isConnected(peerName) {
-  const connection = peers.get(peerName).connection;
+export function isConnected(peerId) {
+  const connection = peers.get(peerId).connection;
   return connection && !connection.closed;
 }
-export function getConnectedPeerNames() {
-  return peers.allNames().filter(peerName => isConnected(peerName))
+export function getConnectedPeerIds() {
+  return peers.allIds().filter(peerId => isConnected(peerId))
 }
 
-export function send(peerName, term, payload = {}) {
-  getConnection(peerName).send(term, payload);
-}
-export async function request(peerName, term, payload = {}) {
-  return await getConnection(peerName).request(term, payload);
-}
-export async function tell(peerName, who, term, payload = {}) {
-  return await getConnection(peerName).tell(who, term, payload);
-}
-
-function handleEnd(reason, peerName) {
-  connectionClosed.emit(peerName, reason);
-}
-function handleSent(term, payload, peerName) {
-  sent.emit(term, payload, peerName);
-}
-function handleRequested(term, payload, peerName) {
-  return requested.emit(term, payload, peerName);
-}
-function handleTold(term, from, payload, peerName) {
-  told.emit(term, from, payload, peerName);
-}
-function handleToldToTell(who, term, payload, peerName) {
-  try {
-    getConnection(who).toldToTell(peerName, term, payload);
-    return ok;
-  } catch (_e) {
-    return reasons.UNKNOWN_PEER;
+let log = () => null
+export function setDebug(enabled) {
+  if (enabled) {
+    log = (...args) => console.log(...args);
+  } else {
+    log = () => null;
   }
 }
 
-function setupConnection(peerName, viaPeerName, connection) {
-  peers.set(peerName, { connection });
+export function send(peerId, term, payload = {}) {
+  log(`send [${term}] => (${peerId}) ::`, payload);
+  getConnection(peerId).send(term, payload);
+}
+export async function request(peerId, term, payload = {}) {
+  log(`request [${term}] => (${peerId}) ::`, payload);
+  const response = await getConnection(peerId).request(term, payload);
+  log(`request completed [${term}] => (${peerId}) ::`, payload, '<<', response);
+  return response;
+}
+export async function tell(peerId, who, term, payload = {}) {
+  log(`tell [${term}] => (${who} via ${peerId}) ::`, payload);
+  const response = await getConnection(peerId).tell(who, term, payload);
+  log(`tell completed [${term}] => (${who} via ${peerId}) ::`, payload, '<<', response);
+  return response;
+}
+
+function handleEnd(reason, peerId) {
+  connectionClosed.emit(peerId, reason);
+}
+function handleSent(term, payload, peerId) {
+  log(`sent [${term}] << (${peerId}) ::`, payload);
+  sent.emit(term, payload, peerId);
+}
+function handleRequested(term, payload, peerId) {
+  log(`requested [${term}] << (${peerId}) ::`, payload);
+  const response = requested.emit(term, payload, peerId);
+  log(`requested [${term}] << (${peerId}) ::`, payload, '>>', response);
+  return response;
+}
+function handleTold(term, from, payload, peerId) {
+  log(`told [${term}] << (${from} via ${peerId}) ::`, payload);
+  told.emit(term, from, payload, peerId);
+}
+function handleToldToTell(who, term, payload, peerId) {
+  log(`toldToTell [${term}] << (${who} via ${peerId}) ::`, payload);
+  let response;
+  try {
+    getConnection(who).toldToTell(peerId, term, payload);
+    response = ok;
+  } catch (_e) {
+    response = reasons.UNKNOWN_PEER;
+  }
+  log(`toldToTell [${term}] << (${who} via ${peerId}) ::`, payload, '>>', response);
+  return response;
+}
+
+function setupConnection(peerId, viaPeerId, connection) {
+  peers.set(peerId, { connection });
   connection.onEnd(handleEnd);
   connection.defSent(handleSent);
   connection.defRequested(handleRequested);
   connection.defTold(handleTold);
   connection.onToldToTell(handleToldToTell);
-  newConnectionReady.emit(peerName, viaPeerName, connection);
+  newConnectionReady.emit(peerId, viaPeerId, connection);
 }
 
-export async function connect(peerName, viaPeerName) {
+export async function connect(peerId, viaPeerId) {
   let newConnection;
-  if (isConnected(peerName)) { throw new Error(`already connected to ${peerName}`); }
-  if (peerName.match(phxWsRegex)) { // direct connect to a phoenix websocket
-    newConnection = new PhxWsConnection(peerName.replace(phxWsRegex, '$1://$2'));
-    await newConnection.startLink(peerName, { myName });
+  if (isConnected(peerId)) { throw new Error(`already connected to ${peerId}`); }
+  if (peerId.match(phxWsRegex)) { // direct connect to a phoenix websocket
+    newConnection = new PhxWsConnection(peerId.replace(phxWsRegex, '$1://$2'));
+    await newConnection.startLink(peerId, { myId });
   } else { // WebRtc connection
-    const connectionVia = getConnection(viaPeerName);
+    const connectionVia = getConnection(viaPeerId);
     newConnection = new RtcConnection(rtcConfig, connectionVia);
-    await newConnection.startLink(peerName, {
-      myName, onOfferCreated: offerOpts => connectionVia.tell(peerName, rtcConnectRequestTerm, offerOpts)
+    await newConnection.startLink(peerId, {
+      myId, onOfferCreated: offerOpts => connectionVia.tell(peerId, rtcConnectRequestTerm, offerOpts)
     });
   }
-  setupConnection(peerName, viaPeerName, newConnection);
+  setupConnection(peerId, viaPeerId, newConnection);
 }
 
-let _onNewConnectionRequested = (_newPeerName, _peerName, _offerOpts) => true;
+let _onNewConnectionRequested = (_newPeerId, _peerId, _offerOpts) => true;
 export function onNewConnectionRequested(callback) {
   _onNewConnectionRequested = callback;
 }
 
-told.on(rtcConnectRequestTerm, async (newPeerName, offerOpts, peerName) => {
+told.on(rtcConnectRequestTerm, async (newPeerId, offerOpts, peerId) => {
   if (
-    !isConnected(peerName) ||
-    !_onNewConnectionRequested(newPeerName, peerName, offerOpts)
+    !isConnected(peerId) ||
+    !_onNewConnectionRequested(newPeerId, peerId, offerOpts)
   ) return;
-  const rtcConn = new RtcConnection(rtcConfig, getConnection(peerName));
-  await rtcConn.startLink(newPeerName, offerOpts);
-  setupConnection(newPeerName, peerName, rtcConn);
+  const rtcConn = new RtcConnection(rtcConfig, getConnection(peerId));
+  await rtcConn.startLink(newPeerId, offerOpts);
+  setupConnection(newPeerId, peerId, rtcConn);
 });
 
-export function close(peerName) {
-  getConnection(peerName).close();
+export function close(peerId) {
+  getConnection(peerId).close();
 }
 
 export function broadcast(term, payload) {
-  getConnectedPeerNames().forEach(peerName => {
+  getConnectedPeerIds().forEach(peerId => {
     try {
-      send(peerName, term, payload);
+      send(peerId, term, payload);
     } finally {}
   });
 }
 
-export async function queryPeers(peerName, params = {}) {
-  return (await request(peerName, queryPeersRequestTerm, params)).peers;
+export async function queryPeers(peerId, params = {}) {
+  return (await request(peerId, queryPeersRequestTerm, params)).peers;
 }
 
 let _onPeerQueried = (_peers, _params) => _peers;
@@ -140,12 +165,12 @@ export function onPeerQueried(callback) {
 }
 
 requested.on(queryPeersRequestTerm, params => {
-  return { peers: _onPeerQueried(peers.allNames(), params) }
+  return { peers: _onPeerQueried(peers.allIds(), params) }
 });
 
-export async function ping(peerName) {
+export async function ping(peerId) {
   const timeStarted = Date.now();
-  await request(peerName, pingTerm);
+  await request(peerId, pingTerm);
   return Date.now() - timeStarted;
 }
 

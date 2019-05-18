@@ -5,7 +5,7 @@ import * as peerConns from './peerConns.js'
 
 const nickNameTerm = 'nickname';
 const localStorageKey = 'nickname';
-const myName = peerConns.getMyName();
+const myId = peerConns.getMyId();
 let nickName;
 
 export function init() {
@@ -13,9 +13,9 @@ export function init() {
   nickName = localStorage.getItem(localStorageKey);
   setNameOnUI(getMyNickName());
 
-  peerConns.newConnectionReady.do((peerName, viaPeerName) => {
+  peerConns.newConnectionReady.do(peerId => {
     if (nickName) {
-      peerConns.getConnection(peerName).send(nickNameTerm, { nickName });
+      peerConns.getConnection(peerId).send(nickNameTerm, { nickName });
     }
   });
 
@@ -26,7 +26,7 @@ export function init() {
 }
 
 export function getMyNickName() {
-  return nickName || myName;
+  return nickName || myId;
 }
 export function getPeerNickName(name) {
   return peers.get(name).nickName || name

@@ -1,6 +1,6 @@
 const peers = {};
 
-export function allNames() {
+export function allIds() {
   return Object.keys(peers);
 }
 
@@ -8,19 +8,19 @@ export function all() {
   return {...peers};
 }
 
-export function set(name, properties) {
-  peers[name] = {
-    ...peers[name],
+export function set(id, properties) {
+  peers[id] = {
+    ...peers[id],
     ...properties
   };
 }
 
-export function get(name) {
-  return {...peers[name]}
+export function get(id) {
+  return {...peers[id]}
 }
 
-export function del(name) {
-  delete peers[name];
+export function del(id) {
+  delete peers[id];
 }
 
 
