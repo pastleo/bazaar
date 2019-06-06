@@ -1,4 +1,3 @@
-import 'http://wzrd.in/standalone/uuid%2Fv4@latest'; /* uuidv4 */
 import * as debug from './debug.js';
 import { iceServers } from './config.js';
 import './types.js';
@@ -211,7 +210,7 @@ export default class BazaarConnection {
    * @param {action} action
    */
   registerBazaarWebsocketMessageEvent(type, callback) {
-    const eventId = uuidv4();
+    const eventId = Date.now();
 
     this.websocketMessageEvents.set(eventId, {
       type,
