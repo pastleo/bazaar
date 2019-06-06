@@ -1,3 +1,4 @@
+import { generateId } from './ultis.js';
 import * as debug from './debug.js';
 import { iceServers } from './config.js';
 import './types.js';
@@ -210,7 +211,7 @@ export default class BazaarConnection {
    * @param {action} action
    */
   registerBazaarWebsocketMessageEvent(type, callback) {
-    const eventId = Date.now();
+    const eventId = generateId();
 
     this.websocketMessageEvents.set(eventId, {
       type,
