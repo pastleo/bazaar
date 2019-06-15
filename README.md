@@ -1,6 +1,10 @@
 # bazaar
 
-We don't know what is the point of this project yet, but it supports multiple players jumping around.
+![bazaar-logo](https://i.imgur.com/mREdGIV.png)
+
+* provides information and item exchange place
+* grab forums posts and browse them via walking around
+* create your own place
 
 ## `web_client`
 
