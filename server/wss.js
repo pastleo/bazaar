@@ -1,4 +1,4 @@
-const WebSocket = require('ws');
+import WebSocket from 'ws';
 
 const port = process.env.PORT || 9527;
 
@@ -26,4 +26,4 @@ const wss = new WebSocket.Server({
   }
 });
 
-module.exports = wss;
+export default wss;

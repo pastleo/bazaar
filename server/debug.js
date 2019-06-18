@@ -1,3 +1,6 @@
-const debug = require('debug');
+import dbg from 'debug';
 
-exports.websocket = debug('bazaar:websocket');
+const debug = {
+  websocket: dbg('bazaar:websocket'),
+}
+export default debug;

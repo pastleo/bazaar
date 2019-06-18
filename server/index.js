@@ -1,6 +1,10 @@
-const uuid = require('uuid/v4');
-const wss = require('./wss');
-const debug = require('./debug');
+import uuid from 'uuid';
+import wss from './wss.js';
+import debug from './debug.js';
+
+// testing shared utils:
+import { randomStr } from '../web_client/lib/utils.js';
+console.log('testing shared utils: randomStr() =', randomStr());
 
 /**
  * @type {Map<WebSocket, string>} wsToIdMap
