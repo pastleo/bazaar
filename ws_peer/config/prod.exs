@@ -1,5 +1,12 @@
 use Mix.Config
 
+secret_key_base =
+  System.get_env("SECRET_KEY_BASE") ||
+    raise """
+    environment variable SECRET_KEY_BASE is missing.
+    You can generate one by calling: mix phx.gen.secret
+    """
+
 # For production, don't forget to configure the url host
 # to something meaningful, Phoenix uses this information
 # when generating URLs.
@@ -11,8 +18,11 @@ use Mix.Config
 # before starting your production server.
 config :ws_peer, WsPeerWeb.Endpoint,
   http: [:inet6, port: System.get_env("PORT") || 4000],
-  url: [host: "example.com", port: 80],
-  cache_static_manifest: "priv/static/cache_manifest.json"
+  url: [host: System.get_env("URL_HOST") || "example.com", port: 80],
+  ssl: true,
+  secret_key_base: secret_key_base,
+  cache_static_manifest: "priv/static/cache_manifest.json",
+  check_origin: false
 
 # Do not print debug messages in production
 config :logger, level: :info
@@ -68,4 +78,4 @@ config :logger, level: :info
 
 # Finally import the config/prod.secret.exs which should be versioned
 # separately.
-import_config "prod.secret.exs"
+# import_config "prod.secret.exs"

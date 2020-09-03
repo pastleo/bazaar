@@ -8,7 +8,7 @@ import { init as avatarInit } from './avatar.js'
 peerConns.setRtcConfig({iceServers: [{urls: 'stun:stun.l.google.com:19302'}]});
 const myId = peerConns.getMyId();
 
-export const phxPeerId = 'phx-wss://bazaar-ws-peer.pastleo.me/peer';
+export const phxPeerId = 'phx-wss://bazaar-ws-peer.herokuapp.com/peer';
 
 document.addEventListener('DOMContentLoaded', async () => {
   await gameInit();

@@ -2,7 +2,7 @@ defmodule WsPeerWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :ws_peer
 
   socket "/peer", WsPeerWeb.PeerSocket,
-    websocket: true,
+    websocket: [timeout: 45_000],
     longpoll: false
 
   # Serve at "/" the static files from "priv/static" directory.
