@@ -13,11 +13,3 @@ use any static http server running on `web_client/`, then open `web_client/dev.h
 ## `ws_peer`
 
 this is a typical [phoenix](https://phoenixframework.org/) project, as a peer to let browsers find each other
-
-## Heroku deployment
-
-```
-heroku git:remote -a HEROKU_PROJECT_NAME
-git subtree push --prefix ws_peer heroku master
-git push heroku `git subtree split --prefix ws_peer master`:master --force
-```

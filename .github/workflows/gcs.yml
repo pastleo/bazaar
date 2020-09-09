@@ -1,0 +1,24 @@
+name: deploy to gcs
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      with:
+        version: '290.0.1'
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        export_default_credentials: true
+    - run: sed 's/src="lib\/index.js"/src="'${GITHUB_SHA}'-lib\/index.js"/' web_client/dev.html > web_client/index.html
+    - run: cp -r web_client/lib "web_client/${GITHUB_SHA}-lib"
+    - run: gsutil -m rsync -r web_client/ "gs://${GCP_BUCKET_NAME}/"
+      env:
+        GCP_BUCKET_NAME: ${{ secrets.GCP_BUCKET_NAME }}

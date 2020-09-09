@@ -16,3 +16,13 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
   * Docs: https://hexdocs.pm/phoenix
   * Mailing list: http://groups.google.com/group/phoenix-talk
   * Source: https://github.com/phoenixframework/phoenix
+
+## Heroku deployment
+
+> Github Action configured
+
+```
+heroku git:remote -a HEROKU_PROJECT_NAME
+git subtree push --prefix ws_peer heroku master
+git push heroku `git subtree split --prefix ws_peer master`:master --force
+```
